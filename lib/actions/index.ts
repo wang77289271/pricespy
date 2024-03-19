@@ -1,10 +1,12 @@
 'use server'
 
+import { User } from '@/types'
 import Product from '../models/product.model'
 import { connectToDB } from '../mongoose'
 import { scrapeAmazonProduct } from '../scraper'
 import { getAveragePrice, getHighestPrice, getLowestPrice } from '../utils'
 import { revalidatePath } from 'next/cache'
+import { generateEmailBody, sendEmail } from '../nodemailer'
 
 export async function scrapeAndStoreProduct(productUrl: string) {
   if (!productUrl) return
@@ -43,7 +45,7 @@ export async function scrapeAndStoreProduct(productUrl: string) {
   }
 }
 
-export async function getProductById(productId: String) {
+export async function getProductById(productId: string) {
   try {
     connectToDB()
     const product = await Product.findOne({ _id: productId })
@@ -65,7 +67,7 @@ export async function getAllProducts() {
   }
 }
 
-export async function getSimilarProducts(productId: String) {
+export async function getSimilarProducts(productId: string) {
   try {
     connectToDB()
     const currentProducts = await Product.findById(productId)
@@ -77,6 +79,31 @@ export async function getSimilarProducts(productId: String) {
     }).limit(3)
 
     return similarProducts
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export async function addUserEmailToProduct(
+  productId: string,
+  userEmail: string
+) {
+  try {
+    const product = await Product.findById(productId)
+    if (!product) return
+
+    const userExists = product.users.some(
+      (user: User) => user.email === userEmail
+    )
+
+    if (!userExists) {
+      product.users.push({ email: userEmail })
+      await product.save()
+
+      const emailContent = await generateEmailBody(product, 'WELCOME')
+
+      await sendEmail(emailContent, [userEmail])
+    }
   } catch (error) {
     console.log(error)
   }

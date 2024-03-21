@@ -10,7 +10,7 @@ const spaceGrotesk = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Amazon Pricewise',
+  title: 'Amazon Pricespy',
   description:
     'Track amazon product prices effortlessly and save money on your online shopping',
 }

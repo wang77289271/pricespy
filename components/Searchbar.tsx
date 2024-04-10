@@ -40,6 +40,7 @@ const Searchbar = () => {
       console.log(error)
     } finally {
       setIsLoading(false)
+      scrollTo({ top: document.getElementById('trending-section')?.offsetTop })
     }
   }
   return (
